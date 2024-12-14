@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES6",                        // Компиляция в ES6
+    "module": "ESNext",                   // Использование CommonJS модулей
+    "esModuleInterop": true,                // Включение поддержки импорта по умолчанию из CommonJS
+    "skipLibCheck": true,                   // Пропуск проверки типов в библиотеках
+    "forceConsistentCasingInFileNames": true, // Обеспечивает строгую проверку регистров
+    "strict": true,                         // Включает строгие проверки типов
+    "outDir": "./dist",                     // Указание директории для компилированных файлов
+    "rootDir": "./src",                     // Указание корневой директории исходных файлов
+    "resolveJsonModule": true,              // Поддержка импорта JSON как модулей
+    "moduleResolution": "node",             // Использование разрешения модулей, аналогичного Node.js
+    "skipDefaultLibCheck": true             // Пропуск проверки типов стандартных библиотек
+  },
+  "include": [
+    "src/**/*.ts"                           // Включение всех TypeScript файлов в папке src и ее подкаталогах
+  ],
+  "exclude": [
+    "node_modules",                         // Исключение node_modules
+    "dist"                                  // Исключение директории dist
+  ]
+}
