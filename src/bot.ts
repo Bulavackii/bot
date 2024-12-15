@@ -108,14 +108,16 @@ const sendAutoReply = async (msg: TelegramBot.Message): Promise<void> => {
 📈 **Предупреждения:** ${profanityWarnings.get(userId)?.count || 0}
 📝 **Анти-мат база содержит:** ${profanityList.length} слов
 
-⚠️ **Действия:** Если вы продолжите использовать ненормативную лексику, администрация получит уведомление, и ваш аккаунт может быть заблокирован в Telegram.`
+⚠️ **Действия:** Если вы продолжите использовать ненормативную лексику, администрация получит уведомление, и ваш аккаунт может быть заблокирован в Telegram.`;
 
     bot.sendMessage(chatId, warningMessage);
     return;
   }
 
   if (excludedUsers.has(senderId!)) {
-    console.log(`🚫 Отправитель ${senderId} в Избранном. Автоответ не отправлен.`);
+    console.log(
+      `🚫 Отправитель ${senderId} в Избранном. Автоответ не отправлен.`
+    );
     return;
   }
 
@@ -161,9 +163,7 @@ const mainMenuKeyboard = [
       callback_data: "edit_auto_reply_message",
     },
   ],
-  [
-    { text: "📊 Предупреждения", callback_data: "view_warnings" },
-  ]
+  [{ text: "📊 Предупреждения", callback_data: "view_warnings" }],
 ];
 
 // Функция отправки главного меню
@@ -195,9 +195,13 @@ const displayWarnings = (chatId: number): void => {
       )
       .join("\n") || "📉 Нет предупреждений";
 
-  bot.sendMessage(chatId, `📋 **Внимание! В переписке обнаружен мат! Информация о нарушении:**\n\n${warningsList}`, {
-    parse_mode: "Markdown",
-  });
+  bot.sendMessage(
+    chatId,
+    `📋 **Внимание! В переписке обнаружен мат! Информация о нарушении:**\n\n${warningsList}`,
+    {
+      parse_mode: "Markdown",
+    }
+  );
 };
 
 // Сохранение и загрузка данных
@@ -319,25 +323,28 @@ bot.on("callback_query", async (callbackQuery) => {
         "🔑 **Введите ID пользователя для удаления из Избранного: (узнать их ID через @userinfobot командой /start)**"
       );
       break;
-      case "view_exceptions":
-        if (excludedUsers.size === 0) {
-          bot.sendMessage(chatId, "📋 **Нет пользователей в списке исключений.**");
-        } else {
-          const exceptionsList = Array.from(excludedUsers)
-            .map((userId) => {
-              // Получаем информацию о пользователе из мапы предупреждений или выводим "Имя не задано"
-              const userInfo = profanityWarnings.get(userId);
-              const username = userInfo?.username || "Имя не задано";
-              return `🆔 ${userId}\n`;
-            })
-            .join("\n\n");
-          bot.sendMessage(
-            chatId,
-            `📋 **Список исключений:**\n\n${exceptionsList}`,
-            { parse_mode: "Markdown" }
-          );
-        }
-        break;      
+    case "view_exceptions":
+      if (excludedUsers.size === 0) {
+        bot.sendMessage(
+          chatId,
+          "📋 **Нет пользователей в списке исключений.**"
+        );
+      } else {
+        const exceptionsList = Array.from(excludedUsers)
+          .map((userId) => {
+            // Получаем информацию о пользователе из мапы предупреждений или выводим "Имя не задано"
+            const userInfo = profanityWarnings.get(userId);
+            const username = userInfo?.username || "Имя не задано";
+            return `🆔 ${userId}\n`;
+          })
+          .join("\n\n");
+        bot.sendMessage(
+          chatId,
+          `📋 **Список исключений:**\n\n${exceptionsList}`,
+          { parse_mode: "Markdown" }
+        );
+      }
+      break;
     case "edit_auto_reply_message":
       waitingForNewMessage = true;
       currentChatId = chatId;
