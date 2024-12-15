@@ -19,7 +19,10 @@ let autoReplyMessage =
   "Буду рад помочь вам, как только смогу!";
 let autoReplyEnabled = true; // Флаг для включения/выключения автоответчика
 let profanityFilterEnabled = true; // Флаг для включения/выключения фильтра мата
-let profanityWarnings = new Map<number, { username: string; time: string; count: number; id: number }>();
+let profanityWarnings = new Map<
+  number,
+  { username: string; time: string; count: number; id: number }
+>();
 let waitingForExceptionInput = false;
 let waitingForNewMessage = false;
 let currentAction: string | null = null;
@@ -33,7 +36,10 @@ let profanityList: string[] = [];
 const loadProfanityList = (): void => {
   try {
     if (fs.existsSync(profanityFilePath)) {
-      profanityList = fs.readFileSync(profanityFilePath, "utf-8").split("\n").map(line => line.trim());
+      profanityList = fs
+        .readFileSync(profanityFilePath, "utf-8")
+        .split("\n")
+        .map((line) => line.trim());
       console.log("📂 Список матерных слов успешно загружен.");
     }
   } catch (err) {
@@ -57,7 +63,7 @@ const isWorkingDay = (): boolean => {
 
 // Функция для проверки мата в сообщениях
 const containsProfanity = (text: string): boolean => {
-  return profanityList.some(word => text.toLowerCase().includes(word));
+  return profanityList.some((word) => text.toLowerCase().includes(word));
 };
 
 // Функция отправки автоответа
@@ -65,58 +71,67 @@ const sendAutoReply = async (msg: TelegramBot.Message): Promise<void> => {
   const senderId = msg.from?.id;
   const chatId = msg.chat.id;
   const messageText = msg.text || "";
-  console.log(`⚙️ Checking exclusions for sender ID: ${senderId}, chat ID: ${chatId}`);
+  console.log(
+    `⚙️ Проверка исключения к отправителю с ID: ${senderId}, chat ID: ${chatId}`
+  );
 
-// Проверка мата
-if (profanityFilterEnabled && containsProfanity(messageText)) {
-  console.log("⚠️ Сообщение содержит мат. Отправляю предупреждение пользователю.");
+  // Проверка мата
+  if (profanityFilterEnabled && containsProfanity(messageText)) {
+    console.log(
+      "⚠️ Сообщение содержит мат. Отправляю предупреждение пользователю."
+    );
 
-  // Получаем информацию о пользователе
-  const username = msg.from?.username || "Неизвестный пользователь";
-  const time = moment().format("YYYY-MM-DD HH:mm:ss");
-  const userId = senderId!;
+    // Получаем информацию о пользователе
+    const username = msg.from?.username || "Неизвестный пользователь";
+    const time = moment().format("YYYY-MM-DD HH:mm:ss");
+    const userId = senderId!;
 
-  // Обновляем или добавляем предупреждение для пользователя
-  if (!profanityWarnings.has(userId)) {
-    profanityWarnings.set(userId, { username, time, count: 1, id: userId });
-  } else {
-    const userWarning = profanityWarnings.get(userId);
-    if (userWarning) {
-      userWarning.count++;
-      userWarning.time = time;
+    // Обновляем или добавляем предупреждение для пользователя
+    if (!profanityWarnings.has(userId)) {
+      profanityWarnings.set(userId, { username, time, count: 1, id: userId });
+    } else {
+      const userWarning = profanityWarnings.get(userId);
+      if (userWarning) {
+        userWarning.count++;
+        userWarning.time = time;
+      }
     }
-  }
 
-  // Формируем и отправляем подробное предупреждение
-  const warningMessage = `⚠️ **Предупреждение!** Ваше сообщение содержит ненормативную лексику! 🔴\n\n
+    // Формируем и отправляем подробное предупреждение
+    const warningMessage = `⚠️ **Предупреждение!** Ваше сообщение содержит ненормативную лексику! 🤐\n\n
 💬 **Ваше сообщение:** "${messageText}"
   
 📝 **Информация о пользователе:**
+
 - 🧑‍💼 **Ник:** @${username}
 - 📱 **Телефон:** Не предоставлен
-  
 📈 **Предупреждения:** ${profanityWarnings.get(userId)?.count || 0}
-  
-⚠️ **Действия:** Если вы продолжите использовать ненормативную лексику, администрация получит уведомление, и ваш аккаунт может быть заблокирован в Telegram.`;
+📝 **Анти-мат база содержит:** ${profanityList.length} слов
 
-  bot.sendMessage(chatId, warningMessage);
-  return;
-}
+⚠️ **Действия:** Если вы продолжите использовать ненормативную лексику, администрация получит уведомление, и ваш аккаунт может быть заблокирован в Telegram.`
+
+    bot.sendMessage(chatId, warningMessage);
+    return;
+  }
 
   if (excludedUsers.has(senderId!)) {
-    console.log(`🚫 Sender ${senderId} is excluded. No auto-reply sent.`);
+    console.log(`🚫 Отправитель ${senderId} в Избранном. Автоответ не отправлен.`);
     return;
   }
 
   if (!isWorkingDay() && autoReplyEnabled) {
     try {
       await bot.sendMessage(chatId, autoReplyMessage);
-      console.log(`📢 Auto-reply sent to chat ID: ${chatId}`);
+      console.log(`📢 Автоответ отправлен в чат с ID: ${chatId}`);
     } catch (error) {
-      console.error(`⚠️ Ошибка при отправке автоответа в чат с ID ${chatId}: ${error}`);
+      console.error(
+        `⚠️ Ошибка при отправке автоответа в чат с ID ${chatId}: ${error}`
+      );
     }
   } else {
-    console.log("📅 It's a working day or auto-reply is disabled. No auto-reply sent.");
+    console.log(
+      "📅 Это рабочий день или автоответчик выключен. Автоответ не отправлен."
+    );
   }
 };
 
@@ -124,35 +139,37 @@ if (profanityFilterEnabled && containsProfanity(messageText)) {
 const mainMenuKeyboard = [
   [
     {
-      text: `🤖 Автоответчик`,
+      text: `🚀 Автоответчик`,
       callback_data: "toggle_auto_reply",
     },
     {
-      text: `🔒 Фильтр мата`,
+      text: `🤐 Антимат`,
       callback_data: "toggle_profanity_filter",
     },
   ],
   [
     {
-      text: `➕ Добавить исключение`,
+      text: `➕ Добавить в Избранное`,
       callback_data: "add_exception",
     },
-    { text: "➖ Удалить исключение", callback_data: "remove_exception" },
+    { text: "➖ Удалить из Избранного", callback_data: "remove_exception" },
   ],
   [
-    { text: "📜 Просмотреть исключения", callback_data: "view_exceptions" },
+    { text: "📜 Просмотр Избранных", callback_data: "view_exceptions" },
     {
-      text: "✏️ Редактировать автоответчик",
+      text: "✏️ Автоответ",
       callback_data: "edit_auto_reply_message",
     },
-    { text: "📊 Просмотреть предупреждения", callback_data: "view_warnings" },
   ],
+  [
+    { text: "📊 Предупреждения", callback_data: "view_warnings" },
+  ]
 ];
 
 // Функция отправки главного меню
 const sendMainMenu = (chatId: number): void => {
   bot
-    .sendMessage(chatId, "🌐 **Выберите действие:**", {
+    .sendMessage(chatId, "👤 **Выберите действие:**", {
       reply_markup: { inline_keyboard: mainMenuKeyboard },
     })
     .catch((error) => {
@@ -166,16 +183,19 @@ const displayWarnings = (chatId: number): void => {
     Array.from(profanityWarnings.values())
       .map(
         (warning) =>
-          `👤 **Пользователь:** ${warning.username || "Неизвестный"}\n` +
+          `👤 **Пользователь:** @${warning.username || "Имя не задано"}\n` +
           `🔑 **ID:** ${warning.id}\n` +
           `📅 **Дата:** ${warning.time}\n` +
           `⚠️ **Предупреждений:** ${warning.count}\n` +
-          `📉 **Статус:** ${warning.count >= 3 ? "❗️Критично" : "✅ Нормально"}\n` +
-          `—`.repeat(40) // Разделитель между предупреждениями
+          `📉 **Статус:** ${
+            warning.count >= 3 ? "❗️Критично" : "✅ Нормально"
+          }\n` +
+          `📝 **Анти-мат база содержит:** ${profanityList.length} слов\n` +
+          `—`.repeat(30) // Разделитель между предупреждениями
       )
       .join("\n") || "📉 Нет предупреждений";
 
-  bot.sendMessage(chatId, `📋 **Предупреждения о мате:**\n\n${warningsList}`, {
+  bot.sendMessage(chatId, `📋 **Внимание! В переписке обнаружен мат! Информация о нарушении:**\n\n${warningsList}`, {
     parse_mode: "Markdown",
   });
 };
@@ -214,7 +234,7 @@ const loadExcludedUsers = (): void => {
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const senderId = msg.from?.id;
-  if (!senderId || msg.from?.is_bot) return;
+  if (!senderId || msg.from?.is_bot) return; // Если сообщение пришло от бота или не удалось получить ID отправителя, обработка сообщения прекращается
   if (waitingForExceptionInput && currentChatId === chatId) {
     const userId = parseInt(msg.text ?? "", 10);
     if (isNaN(userId) || userId <= 0) {
@@ -225,7 +245,7 @@ bot.on("message", (msg) => {
       excludedUsers.add(userId);
       bot.sendMessage(
         chatId,
-        `✅ **Пользователь с ID ${userId} добавлен в исключения.**`
+        `✅ **Пользователь с ID ${userId} добавлен в исключения. Автоответы к нему больше не применяются!**`
       );
       saveExcludedUsers();
     } else if (currentAction === "remove") {
@@ -233,7 +253,7 @@ bot.on("message", (msg) => {
         excludedUsers.delete(userId);
         bot.sendMessage(
           chatId,
-          `✅ **Пользователь с ID ${userId} удален из исключений.**`
+          `✅ **Пользователь с ID ${userId} удален из исключений. Автоответы к нему снова применяются!**`
         );
         saveExcludedUsers();
       } else {
@@ -261,7 +281,7 @@ bot.on("message", (msg) => {
   sendAutoReply(msg);
 });
 
-// Логика для обработки команд и действий через колбэки
+// Логика для обработки команд и действий через коллбэки
 bot.on("callback_query", async (callbackQuery) => {
   const chatId = callbackQuery.message?.chat.id;
   const action = callbackQuery.data;
@@ -271,14 +291,14 @@ bot.on("callback_query", async (callbackQuery) => {
       autoReplyEnabled = !autoReplyEnabled;
       bot.sendMessage(
         chatId,
-        `✅ **Автоответчик ${autoReplyEnabled ? "включен" : "выключен"}.**`
+        `🚀 **Автоответчик ${autoReplyEnabled ? "включен" : "выключен"}.**`
       );
       break;
     case "toggle_profanity_filter":
       profanityFilterEnabled = !profanityFilterEnabled;
       bot.sendMessage(
         chatId,
-        `🔒 **Фильтр мата ${profanityFilterEnabled ? "включен" : "выключен"}.**`
+        `🤐 **Фильтр мата ${profanityFilterEnabled ? "включен" : "выключен"}.**`
       );
       break;
     case "add_exception":
@@ -287,7 +307,7 @@ bot.on("callback_query", async (callbackQuery) => {
       currentChatId = chatId;
       bot.sendMessage(
         chatId,
-        "🔑 **Введите ID пользователя для добавления в исключения:**"
+        "🔑 **Введите ID пользователя для добавления в Избранное: (узнать их ID через @userinfobot командой /start)**"
       );
       break;
     case "remove_exception":
@@ -296,21 +316,35 @@ bot.on("callback_query", async (callbackQuery) => {
       currentChatId = chatId;
       bot.sendMessage(
         chatId,
-        "🔑 **Введите ID пользователя для удаления из исключений:**"
+        "🔑 **Введите ID пользователя для удаления из Избранного: (узнать их ID через @userinfobot командой /start)**"
       );
       break;
-    case "view_exceptions":
-      bot.sendMessage(
-        chatId,
-        `📋 **Исключенные пользователи:** ${
-          Array.from(excludedUsers).join(", ") || "Нет исключенных пользователей"
-        }`
-      );
-      break;
+      case "view_exceptions":
+        if (excludedUsers.size === 0) {
+          bot.sendMessage(chatId, "📋 **Нет пользователей в списке исключений.**");
+        } else {
+          const exceptionsList = Array.from(excludedUsers)
+            .map((userId) => {
+              // Получаем информацию о пользователе из мапы предупреждений или выводим "Имя не задано"
+              const userInfo = profanityWarnings.get(userId);
+              const username = userInfo?.username || "Имя не задано";
+              return `🆔 ${userId}\n`;
+            })
+            .join("\n\n");
+          bot.sendMessage(
+            chatId,
+            `📋 **Список исключений:**\n\n${exceptionsList}`,
+            { parse_mode: "Markdown" }
+          );
+        }
+        break;      
     case "edit_auto_reply_message":
       waitingForNewMessage = true;
       currentChatId = chatId;
-      bot.sendMessage(chatId, "✏️ **Введите новое сообщение для автоответчика:**");
+      bot.sendMessage(
+        chatId,
+        "✏️ **Введите в чате новое сообщение для автоответчика:**"
+      );
       break;
     case "view_warnings":
       displayWarnings(chatId);
@@ -322,7 +356,7 @@ bot.on("callback_query", async (callbackQuery) => {
   bot.answerCallbackQuery(callbackQuery.id);
 });
 
-// Стартуем бота
+// Старт бота
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(
@@ -336,4 +370,7 @@ loadProfanityList();
 loadExcludedUsers();
 process.on("exit", saveExcludedUsers);
 
-console.log("🤖 **Бот запущен.**");
+console.log("🚀 **Бот успешно запущен.**");
+console.log("🔄 **Загрузка данных...**");
+console.log("📂 **Загружены исключенные пользователи.**");
+console.log("🛠️ **Готов к работе!**");
